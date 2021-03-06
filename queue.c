@@ -55,6 +55,8 @@ bool q_insert_head(queue_t *q, char *s)
     /* Don't forget to allocate space for the string and copy it */
     /* What if either call to malloc returns NULL? */
     newh = malloc(sizeof(list_ele_t));
+    if (!newh)
+        return false;
     newh->value = malloc(sizeof(char) * (strlen(s) + 1));
     if (!newh->value) {
         free(newh);
@@ -99,8 +101,6 @@ bool q_insert_tail(queue_t *q, char *s)
         q->tail = newt;
     }
     q->size++;
-    // free(newt->value);
-    // free(newt);
     return true;
 }
 
@@ -171,33 +171,36 @@ void q_reverse(queue_t *q)
 list_ele_t *merge(list_ele_t *l1, list_ele_t *l2)
 {
     // merge with pseudo node
-    if (l1 == NULL)
+    if (!l1)
         return l2;
-    if (l2 == NULL)
+    if (!l2)
         return l1;
     list_ele_t *tmp = NULL;
     list_ele_t *head = NULL;
 
-    if (strcmp(l1->value, l2->value) < 0) {
-        head = l1;
-        l1 = l1->next;
-    } else {
-        head = l2;
-        l2 = l2->next;
-    }
-
-    tmp = head;
     while (l1 && l2) {
         if (strcmp(l1->value, l2->value) < 0) {
-            tmp->next = l1;
-            l1 = l1->next;
+            if (!tmp) {
+                head = l1;
+                tmp = head;
+                l1 = l1->next;
+            } else {
+                tmp->next = l1;
+                l1 = l1->next;
+                tmp = tmp->next;
+            }
         } else {
-            tmp->next = l2;
-            l2 = l2->next;
+            if (!tmp) {
+                head = l2;
+                tmp = head;
+                l2 = l2->next;
+            } else {
+                tmp->next = l2;
+                l2 = l2->next;
+                tmp = tmp->next;
+            }
         }
-        tmp = tmp->next;
     }
-
     while (l1 || l2) {
         if (l1) {
             tmp->next = l1;
@@ -220,7 +223,6 @@ list_ele_t *mergeSortList(list_ele_t *head)
     list_ele_t *fast = head->next;
     list_ele_t *slow = head;
 
-    // split list
     while (fast && fast->next) {
         slow = slow->next;
         fast = fast->next->next;
@@ -228,7 +230,6 @@ list_ele_t *mergeSortList(list_ele_t *head)
     fast = slow->next;
     slow->next = NULL;
 
-    // sort each list
     list_ele_t *l1 = mergeSortList(head);
     list_ele_t *l2 = mergeSortList(fast);
 
